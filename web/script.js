@@ -11,12 +11,23 @@ function enviarImagem() {
             method: 'POST',
             body: formData
         })
-            .then(response => response.text())
-            .then(data => {
-                console.log(data);
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-            });
+        .then(response => response.text())
+        .then(data => {
+          fazerDownloadArquivo(data);
+        })
+        .catch(error => console.log(error));
     }
 }
+
+function fazerDownloadArquivo(response) {
+    const nomeArquivo = 'arquivo.txt';
+    const blob = new Blob([response], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+  
+    const linkDownload = document.createElement('a');
+    linkDownload.href = url;
+    linkDownload.download = nomeArquivo;
+    linkDownload.click();
+  
+    URL.revokeObjectURL(url);
+  }

@@ -1,8 +1,9 @@
 import pytesseract
 import cv2
 import tempfile
+import os
 
-from flask import Flask, request
+from flask import Flask, request, send_file, make_response
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -20,8 +21,15 @@ def upload_image():
 
     img = request.files['image']
     pathtemp = CaminhoTemporario(img)
+    texto = BuscarTextoImagem(pathtemp)
 
-    return BuscarTextoImagem(pathtemp)
+    nome_arquivo = Criatxt(texto, img.filename)
+
+    caminho_arquivo = os.path.join(app.root_path, nome_arquivo)
+
+    resposta = make_response(send_file(caminho_arquivo, as_attachment=True))
+    resposta.headers['Content-Disposition'] = 'attachment; filename=' + nome_arquivo
+    return resposta
 
 def BuscarTextoImagem(img):
     path = r"Tesseract-OCR\tesseract.exe"
@@ -33,7 +41,21 @@ def BuscarTextoImagem(img):
 def CaminhoTemporario(img):
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(img.read())
-        return  temp_file.name
+        return temp_file.name
+
+def Criatxt(texto, nome_arquivo):
+    nome_arquivo += ".txt"
+    with open(nome_arquivo, 'w') as arquivo:
+        arquivo.write(texto)
+    print(f"Arquivo '{nome_arquivo}' criado com sucesso.")
+    return nome_arquivo
+
+def DeletarArquivo(caminho_arquivo):
+    if os.path.exists(caminho_arquivo):
+        os.remove(caminho_arquivo)
+        print(f"Arquivo '{caminho_arquivo}' deletado com sucesso.")
+    else:
+        print(f"O arquivo '{caminho_arquivo}' não existe.")
 
 if __name__ == '__main__':
     app.run()
